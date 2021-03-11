@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Conversation;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\Expr\Join;
 
 /**
  * @method Conversation|null find($id, $lockMode = null, $lockVersion = null)
@@ -47,4 +48,50 @@ class ConversationRepository extends ServiceEntityRepository
         ;
     }
     */
+    public function findConversationByParticipants(int $otherUserId, int $myId)
+    {
+        $qb =$this->createQueryBuilder('c');
+        return $qb->innerJoin('c.participants', 'p')
+            ->select('count(p.conversation)')
+            ->where($qb->expr()->eq('p.user', ':me'))
+            ->orWhere($qb->expr()->eq('p.user', ':otherUser'))
+            ->groupBy('p.conversation')
+            ->having($qb->expr()->eq('count(p.conversation)', '2'))
+            ->setParameter('me', $myId)
+            ->setParameter('otherUser', $otherUserId)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+    public function findConversationsByUser(int $userId)
+    {
+        $qb =$this->createQueryBuilder('c');
+        return $qb
+            ->select('otherUser.username', 'c.id as conversationId', 'lm.content', 'lm.createdAt')
+            ->innerJoin('c.participants', 'p', Join::WITH, $qb->expr()->neq('p.user', ':user'))
+            ->innerJoin('c.participants', 'me', Join::WITH, $qb->expr()->eq('me.user', ':user'))
+            ->leftJoin('c.lastMessage', 'lm', Join::WITH, $qb->expr()->eq('me.user', ':user'))
+            ->innerJoin('me.user', 'meUser')
+            ->innerJoin('p.user', 'otherUser')
+            ->where('me.user = :user')
+            ->orderBy('lm.createdAt', 'DESC')
+            ->setParameter(':user', $userId)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+    public function checkIfUserIsParticipant(int $conversationId, int $userId)
+    {
+        $qb =$this->createQueryBuilder('c');
+        return $qb
+            ->select()
+            ->innerJoin('c.participants', 'p')
+            ->where('c.id = :conversationId')
+            ->andWhere('p.user = :userId')
+            ->setParameter(':userId', $userId)
+            ->setParameter(':conversationId', $conversationId)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+    }
 }

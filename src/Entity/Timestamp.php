@@ -18,4 +18,12 @@ trait Timestamp
     {
         return $this->createdAt = new \DateTime();
     }
+
+    /**
+     * @return mixed
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
 }

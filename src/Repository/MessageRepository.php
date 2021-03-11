@@ -47,4 +47,18 @@ class MessageRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function findMessagesByConversationId(int $conversationId)
+    {
+        $qb =$this->createQueryBuilder('m');
+        return $qb
+            ->select('m')
+            ->where('m.conversation = :conversationId')
+            ->setParameter(':conversationId', $conversationId)
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+
 }

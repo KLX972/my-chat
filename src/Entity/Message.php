@@ -37,6 +37,12 @@ class Message
      */
     private $conversation;
 
+    /**
+     *
+     * @ORM\Column(type="boolean")
+     */
+    private $mine;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -74,6 +80,18 @@ class Message
     public function setConversation(?Conversation $conversation): self
     {
         $this->conversation = $conversation;
+
+        return $this;
+    }
+
+    public function getMine(): ?bool
+    {
+        return $this->mine;
+    }
+
+    public function setMine($mine): self
+    {
+        $this->mine = $mine;
 
         return $this;
     }
